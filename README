@@ -1,0 +1,16 @@
+This project lets you create arbitrary SMS reminders for yourself.
+
+The project is built for Google App Engine and Twilio. Too deploy you'll need to configure app.yamp and configuration.py to match your GAE applicaton and Twilio credentials.
+
+Currently supported reminders...
+
+- Create a reminder N minutes from now
+- Create a reminder N days from now
+- Create a reminder for a specific time in the current day
+
+Examples...
+
+> 45 order flowers for your honey
+> 1d take out the trash at home
+> 23:45 go to bed!
+

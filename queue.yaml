@@ -1,0 +1,4 @@
+queue:
+- name: reminders
+  rate: 8/m
+  bucket_size: 1
