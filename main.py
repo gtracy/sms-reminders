@@ -41,20 +41,18 @@ class ReminderTaskHandler(webapp.RequestHandler):
                                                  from_=configuration.TWILIO_CALLER_ID,
                                                  body=msg)
         except TwilioRestException,te:
-            logging.error('Unable to send SMS message! %s'%te)
+            logging.error('Unable to send SMS message! %s' % te)
         
 ## end
 
 
 class MainHandler(webapp.RequestHandler):
     def post(self):
-        self.get()
-    def get(self):
       
         # who called? and what did they say?
         phone = self.request.get("From")
         body = self.request.get("Body")
-        logging.debug('New request from %s : %s', (phone, body))
+        logging.debug('New request from %s : %s' % (phone, body))
         createLog(phone,body)
 
         cmd = body.split()
@@ -66,20 +64,19 @@ class MainHandler(webapp.RequestHandler):
             if m == command:
                 continue
             msg += m + ' '
-            
-        # take a look at the request and see if it is valid
-        # if it is, process the request
 
+        # parse the command
         if command.isdigit():
             # create a task in <command> minutes
             createTask(phone, msg, int(command)*60)
             response = "got it. we'll remind you in %s minutes" % command
         
-        elif command.find('d') > 0:
+        elif command.lower().find('d') > 0:
             # create a task in a certain number of days
-            sec = command.split('d')[0] * 24 * 60 * 60
+            days = command.split('d')[0]
+            sec = int(days) * 24 * 60 * 60
             createTask(phone, msg, sec)
-            response = "got it. we'll remind you in %s day" % command.split('d')[0]
+            response = "got it. we'll remind you in %s day" % days
   
         elif command.find(':') > 0:
             # create a task at a specified time
@@ -116,7 +113,7 @@ def smsResponse(msg):
     return r
 
 def createTask(phone,msg,sec):
-    logging.debug("Creating new task to fire in %s minutes" % str(sec/60))
+    logging.debug("Creating new task to fire in %s minutes" % str(int(sec)/60))
     task = Task(url='/reminder', 
                 params={'phone':phone,'msg':msg}, 
                 countdown=sec)
