@@ -1,5 +1,7 @@
 import os
 import logging
+import time
+from datetime import date, datetime
 
 from google.appengine.ext import db
 from google.appengine.ext import webapp
@@ -9,7 +11,9 @@ from google.appengine.api.taskqueue import Task
 from twilio import twiml
 from twilio import TwilioRestException
 from twilio.rest import TwilioRestClient
+
 import configuration
+import timezone
 
 #
 # Valid request formats:
@@ -41,16 +45,6 @@ class ReminderTaskHandler(webapp.RequestHandler):
         
 ## end
 
-        num1 = random.randint(0,10)
-        num2 = random.randint(0,10)
-        cookie_question = '%s-%s-m' % (num1,num2)
-        cookie_counter = 1
-        question = '%s x %s' % (str(num1), str(num2))
-        self.response.headers.add_header("Set-Cookie", createCookie('question',cookie_question))
-        self.response.headers.add_header("Set-Cookie", createCookie('counter',cookie_counter))
-        self.response.out.write(question)
-        
-## end
 
 class MainHandler(webapp.RequestHandler):
     def post(self):
@@ -67,44 +61,65 @@ class MainHandler(webapp.RequestHandler):
         # assume everything to the left of the first space is the command, and
         # everything to the right of the first space is the reminder message
         command = cmd[0]
-        msg = cmd[1]  # @fixme - concatenate all elements after zero
+        msg = ''
+        for m in cmd:
+            if m == command:
+                continue
+            msg += m + ' '
             
         # take a look at the request and see if it is valid
         # if it is, process the request
 
         if command.isdigit():
             # create a task in <command> minutes
-            logging.debug("Creating new task to fire in %s minutes" % command)
-            createTask(phone, msg, int(command))
+            createTask(phone, msg, int(command)*60)
+            response = "got it. we'll remind you in %s minutes" % command
         
         elif command.find('d') > 0:
             # create a task in a certain number of days
-            mins = command.split('d')[0] * 24 * 60
-            logging.debug("Creating new task to fire in %s minutes" % mins)
-            createTask(phone, msg, mins)
+            sec = command.split('d')[0] * 24 * 60 * 60
+            createTask(phone, msg, sec)
+            response = "got it. we'll remind you in %s day" % command.split('d')[0]
   
         elif command.find(':') > 0:
             # create a task at a specified time
-            logging.debug("Creating new task to fire at %s" % command)
-            logging.error("FIX ME - no task is generated for this case")
+            local = timezone.LocalTimezone()
+            tod = datetime.strptime(command, "%H:%M")
+            eta = datetime.combine(date.today(), tod.time()).replace(tzinfo=local)
+            now = datetime.now(local)
+            delta = eta - now
+            createTask(phone, msg, delta.seconds)
+            response = "got it. we'll remind you at %s" % eta
+            
+            logging.debug('ETA : %s' % eta)
+            logging.debug('... now : %s' % now)
+            logging.debug('... delta : %s' % delta.seconds)
     
         else:
             response = '<minutes>, <days>d or hh:mm <reminder-message>'
-            self.response.out.write(smsResponse(response))
+            
+        self.response.out.write(smsResponse(response))
 
         return
       
-
 ## end MainHandler
 
 class IndexHandler(webapp.RequestHandler):
     def get(self):
         self.response.out.write("You've wondered to a strange place my friend. <a href=http://twitter.com/gregtracy>@gregtracy</a>")
+
 ## end IndexHandler
 
-def createTask(phone,msg,minutes):
-    # @fixme configure task to run in a certain number of minutes
-    task = Task(url='/reminder', params={'phone':phone,'msg':msg})
+def smsResponse(msg):
+    r = twiml.Response()
+    r.append(twiml.Sms(msg))
+    return r
+
+def createTask(phone,msg,sec):
+    logging.debug("Creating new task to fire in %s minutes" % str(sec/60))
+    task = Task(url='/reminder', 
+                params={'phone':phone,'msg':msg}, 
+                countdown=sec)
     task.add('reminders')
 # end
 
