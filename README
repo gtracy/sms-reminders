@@ -1,6 +1,6 @@
 This project lets you create arbitrary SMS reminders for yourself.
 
-The project is built for Google App Engine and Twilio. Too deploy you'll need to configure app.yamp and configuration.py to match your GAE applicaton and Twilio credentials.
+The project is built for Google App Engine and Twilio. To deploy you'll need to configure app.yaml and configuration.py to match your GAE applicaton and Twilio credentials.
 
 Currently supported reminders...
 
@@ -14,3 +14,4 @@ Examples...
 > 1d take out the trash at home
 > 23:45 go to bed!
 
+... the reminders will arrive via SMS as prescribed by these requests.
