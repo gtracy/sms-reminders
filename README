@@ -15,3 +15,17 @@ Examples...
 > 23:45 go to bed!
 
 ... the reminders will arrive via SMS as prescribed by these requests.
+
+There are some shortcuts for setting minute reminders if you want to avoid switching between numbers and letters on your older feature phones. The app will interpret single characters as default minute values. The valid characters are the following:
+
+a = 5
+d = 10
+g = 15
+j = 30
+m = 60
+
+For example...
+
+> g check cookies in oven
+
+... will send a reminder in 15 minutes.
