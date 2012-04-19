@@ -22,6 +22,8 @@ import timezone
 #  x:xx[ap] <message>  - time of current day (am or pm)
 #
 
+shortcuts = { 'a':5, 'd':10, 'g':15, 'j':30, 'm':60 }
+
 class RequestLog(db.Model):
   phone = db.StringProperty(indexed=True)
   date  = db.DateTimeProperty(auto_now_add=True)  
@@ -66,7 +68,17 @@ class MainHandler(webapp.RequestHandler):
             msg += m + ' '
 
         # parse the command
-        if command.isdigit():
+        if command.isdigit() == False and len(command) == 1:
+            # single letters are default minute values
+            # a = 5 d = 10 g = 15 j = 30 m = 60
+            if command not in shortcuts:
+                response = 'illegal shortcut code - a, d, g, j, m are the only valid shortcuts'
+            else:
+                mins = shortcuts[command]
+                createTask(phone, msg, mins * 60)
+                response = "got it. we'll remind you in %s minutes" % mins
+            
+        elif command.isdigit():
             # create a task in <command> minutes
             createTask(phone, msg, int(command)*60)
             response = "got it. we'll remind you in %s minutes" % command
