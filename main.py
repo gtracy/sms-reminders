@@ -60,7 +60,7 @@ class MainHandler(webapp.RequestHandler):
         cmd = body.split()
         # assume everything to the left of the first space is the command, and
         # everything to the right of the first space is the reminder message
-        command = cmd[0]
+        command = cmd[0].lower()
         msg = ''
         for m in cmd:
             if m == command:
