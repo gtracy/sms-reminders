@@ -60,7 +60,7 @@ class MainHandler(webapp.RequestHandler):
         cmd = body.split()
         # assume everything to the left of the first space is the command, and
         # everything to the right of the first space is the reminder message
-        command = cmd[0].lower()
+        command = cmd[0]
         msg = ''
         for m in cmd:
             if m == command:
@@ -71,6 +71,7 @@ class MainHandler(webapp.RequestHandler):
         if command.isdigit() == False and len(command) == 1:
             # single letters are default minute values
             # a = 5 d = 10 g = 15 j = 30 m = 60
+            command = command.lower()
             if command not in shortcuts:
                 response = 'illegal shortcut code - a, d, g, j, m are the only valid shortcuts'
             else:
@@ -107,7 +108,9 @@ class MainHandler(webapp.RequestHandler):
         else:
             response = '<minutes>, <days>d or hh:mm <reminder-message>'
             
-        self.response.out.write(smsResponse(response))
+        # ignore positive feedback on new requests
+        if response.lower().find('got it') >= 0:
+            self.response.out.write(smsResponse(response))
 
         return
       
