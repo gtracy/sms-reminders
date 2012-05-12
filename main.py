@@ -61,6 +61,7 @@ class MainHandler(webapp.RequestHandler):
         # assume everything to the left of the first space is the command, and
         # everything to the right of the first space is the reminder message
         command = cmd[0]
+        logging.debug('new request command is %s' % command)
         msg = ''
         for m in cmd:
             if m == command:
@@ -68,6 +69,8 @@ class MainHandler(webapp.RequestHandler):
             msg += m + ' '
 
         # parse the command
+        
+        # a shortcut code request
         if command.isdigit() == False and len(command) == 1:
             # single letters are default minute values
             # a = 5 d = 10 g = 15 j = 30 m = 60
@@ -78,19 +81,30 @@ class MainHandler(webapp.RequestHandler):
                 mins = shortcuts[command]
                 createTask(phone, msg, mins * 60)
                 response = "got it. we'll remind you in %s minutes" % mins
-            
+        
+        # a minute request
         elif command.isdigit():
             # create a task in <command> minutes
             createTask(phone, msg, int(command)*60)
             response = "got it. we'll remind you in %s minutes" % command
         
+        # an hour request
+        elif command.lower().find('h') > 0:
+            # create a task in a certain number of days
+            hours = command.lower().split('h')[0]
+            sec = int(hours) * 60 * 60
+            createTask(phone, msg, sec)
+            response = "got it. we'll remind you in %s day" % hours
+
+        # a day request
         elif command.lower().find('d') > 0:
             # create a task in a certain number of days
-            days = command.split('d')[0]
+            days = command.lower().split('d')[0]
             sec = int(days) * 24 * 60 * 60
             createTask(phone, msg, sec)
             response = "got it. we'll remind you in %s day" % days
-  
+
+        # a specific time request
         elif command.find(':') > 0:
             # create a task at a specified time
             local = timezone.LocalTimezone()
@@ -106,11 +120,13 @@ class MainHandler(webapp.RequestHandler):
             logging.debug('... delta : %s' % delta.seconds)
     
         else:
-            response = '<minutes>, <days>d or hh:mm <reminder-message>'
+            response = '<minutes>, <hours>h, <days>d or hh:mm <reminder-message>'
             
         # ignore positive feedback on new requests
-        if response.lower().find('got it') >= 0:
+        if response.lower().find('got it') == -1:
             self.response.out.write(smsResponse(response))
+        else:
+            logging.debug('NOT sending response to caller : %s' % response)
 
         return
       
