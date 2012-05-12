@@ -5,7 +5,7 @@ import time as _time
 ZERO = timedelta(0)
 HOUR = timedelta(hours=1)
 
-STDOFFSET = timedelta(hours=-7)
+STDOFFSET = timedelta(hours=-5)
 if _time.daylight:
     DSTOFFSET = timedelta(seconds = -_time.altzone)
 else:
